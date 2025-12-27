@@ -4,6 +4,6 @@ uvicorn>=0.40.0
 sqlmodel>=0.0.30
 pydantic
 pydantic-settings>=2.12.0
-python-multipart>=0.0.21
+# python-multipart>=0.0.21
 sqlalchemy-utils>=0.42.1
 sqladmin>=0.2.6
