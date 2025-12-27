@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     yield 
 
 app = FastAPI(title="Social Media App", lifespan=lifespan, docs_url=None, redoc_url=None)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 admin = Admin(app=app, engine=engine)
 
