@@ -16,6 +16,8 @@ class ActionResponse(BaseModel):
 class PostCreate(BaseModel):
     content: str
     user_id: int
+    media_url: Optional[str] = None
+    media_type: Optional[str] = None 
 
 class PostResponse(BaseModel):
     id: int
