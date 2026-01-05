@@ -33,7 +33,7 @@ app = FastAPI(title="Social Media App", lifespan=lifespan, docs_url=None, redoc_
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://2rtg8h-5173.csb.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
