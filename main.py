@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from core.database import init_db, engine
 from core.config import settings
@@ -29,6 +30,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Social Media App", lifespan=lifespan, docs_url=None, redoc_url=None)
 # app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 admin = Admin(app=app, engine=engine)
 
