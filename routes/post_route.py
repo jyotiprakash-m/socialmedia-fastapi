@@ -95,7 +95,8 @@ def schedule_post(req: PostScheduleRequest):
             detail="schedule_at must be in the future"
         )
 
-    webhook_url = "https://socialmedia-fastapi-yx0y.onrender.com/webhooks/scheduled/publish-post"
+    from core.config import settings
+    webhook_url = f"{settings.API_BASE_URL.rstrip('/')}/webhooks/scheduled/publish-post"
     try:
         event_id = create_one_off_scheduled_event(
             webhook_url=webhook_url,

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     HASURA_GRAPHQL_URL: Optional[str] = None
     HASURA_ADMIN_SECRET: Optional[str] = None
     WEBHOOK_SECRET: str = "super-secret-hasura-key-2026"
+    API_BASE_URL: str = "https://socialmedia-fastapi-yx0y.onrender.com"
 
 
     class Config:
