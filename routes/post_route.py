@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 from typing import List, Optional
 from pydantic import BaseModel
@@ -31,11 +31,14 @@ class PostResponse(BaseModel):
     content: str
     user_id: int
     created_at: str
+    media_url: Optional[str] = None
+    media_type: Optional[str] = None
+
 
 class CommentCreate(BaseModel):
     content: str
     user_id: int
-    post_id: int
+    post_id: Optional[int] = None
     parent_comment_id: Optional[int] = None
 
 class CommentResponse(BaseModel):
@@ -60,7 +63,9 @@ def create_post(
             id=created_post.id or 0,
             content=created_post.content,
             user_id=created_post.user_id,
-            created_at=created_post.created_at.isoformat()
+            created_at=created_post.created_at.isoformat(),
+            media_url=created_post.media_url,
+            media_type=created_post.media_type
         )
     except Exception as e:
         raise HTTPException(
@@ -128,7 +133,9 @@ def get_posts_for_user(
             id=post.id,
             content=post.content,
             user_id=post.user_id,
-            created_at=post.created_at.isoformat()
+            created_at=post.created_at.isoformat(),
+            media_url=post.media_url,
+            media_type=post.media_type
         )
         for post in posts
         if post.id is not None
@@ -137,21 +144,44 @@ def get_posts_for_user(
 @router.get("/timeline/{user_id}", response_model=List[PostResponse])
 def get_timeline_posts(
     user_id: int, 
-    friend_ids: List[int], 
+    friend_ids: Optional[List[int]] = Query(None), 
     session: Session = Depends(get_session)
 ):
-    """Get timeline posts for a user (their posts and friends' posts)."""
+    """Get timeline posts for a user (their posts and all their accepted friends' posts)."""
     posts = post_service.get_timeline_posts(session, user_id, friend_ids)
     return [
         PostResponse(
             id=post.id,
             content=post.content,
             user_id=post.user_id,
-            created_at=post.created_at.isoformat()
+            created_at=post.created_at.isoformat(),
+            media_url=post.media_url,
+            media_type=post.media_type
         )
         for post in posts
         if post.id is not None
     ]
+
+@router.get("/{post_id}", response_model=PostResponse)
+def get_post(
+    post_id: int, 
+    session: Session = Depends(get_session)
+):
+    """Get a post by ID."""
+    post = post_service.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Post not found"
+        )
+    return PostResponse(
+        id=post.id or 0,
+        content=post.content,
+        user_id=post.user_id,
+        created_at=post.created_at.isoformat(),
+        media_url=post.media_url,
+        media_type=post.media_type
+    )
 
 @router.delete("/{post_id}", response_model=ActionResponse)
 def delete_post(
@@ -176,7 +206,9 @@ def add_comment(
 ):
     """Add a comment to a post."""
     try:
-        comment_model = Comment(**comment.model_dump())
+        comment_dict = comment.model_dump()
+        comment_dict["post_id"] = post_id
+        comment_model = Comment(**comment_dict)
         created_comment = post_service.add_comment(session, comment_model)
         return CommentResponse(
             id=created_comment.id or 0,
@@ -211,14 +243,44 @@ def get_comments_for_post(
         for comment in comments
     ]
 
+@router.get("/comments/{comment_id}", response_model=CommentResponse)
+def get_comment(
+    comment_id: int, 
+    session: Session = Depends(get_session)
+):
+    """Get a comment by ID."""
+    comment = post_service.get_comment_by_id(session, comment_id)
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Comment not found"
+        )
+    return CommentResponse(
+        id=comment.id or 0,
+        content=comment.content,
+        user_id=comment.user_id,
+        post_id=comment.post_id,
+        parent_comment_id=comment.parent_comment_id,
+        created_at=comment.created_at.isoformat()
+    )
+
 @router.post("/comments/{comment_id}/replies", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
 def add_reply(
+    comment_id: int,
     reply: CommentCreate, 
     session: Session = Depends(get_session)
 ):
     """Add a reply to a comment."""
     try:
-        reply_model = Comment(**reply.model_dump())
+        reply_dict = reply.model_dump()
+        reply_dict["parent_comment_id"] = comment_id
+        if not reply_dict.get("post_id"):
+            parent = post_service.get_comment_by_id(session, comment_id)
+            if not parent:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent comment not found")
+            reply_dict["post_id"] = parent.post_id
+
+        reply_model = Comment(**reply_dict)
         created_reply = post_service.add_reply(session, reply_model)
         return CommentResponse(
             id=created_reply.id or 0,
@@ -228,6 +290,8 @@ def add_reply(
             parent_comment_id=created_reply.parent_comment_id,
             created_at=created_reply.created_at.isoformat()
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

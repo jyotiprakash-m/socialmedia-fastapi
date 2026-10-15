@@ -3,12 +3,16 @@ from sqlmodel import Session
 from typing import List, Optional
 from pydantic import BaseModel
 from models import Story
-from services.story_service import create_story, get_stories_for_user
+from services.story_service import create_story, get_stories_for_user, get_story_by_id, delete_story
 from core.database import get_session
 
 router = APIRouter(prefix="/stories", tags=["Stories"])
 
 # Pydantic models for request/response
+class ActionResponse(BaseModel):
+    ok: bool
+    message: Optional[str] = None
+
 class StoryCreate(BaseModel):
     user_id: int
     media_url: str
@@ -86,3 +90,38 @@ def get_user_stories(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching stories: {str(e)}"
         )
+
+@router.get("/{story_id}", response_model=StoryResponse)
+def get_story(
+    story_id: int,
+    session: Session = Depends(get_session)
+):
+    """Get a story by its ID."""
+    story = get_story_by_id(session, story_id)
+    if not story:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Story not found"
+        )
+    return StoryResponse(
+        id=story.id or 0,
+        user_id=story.user_id,
+        media_url=story.media_url,
+        media_type=story.media_type,
+        created_at=story.created_at.isoformat(),
+        expires_at=story.expires_at.isoformat()
+    )
+
+@router.delete("/{story_id}", response_model=ActionResponse)
+def delete_story_endpoint(
+    story_id: int,
+    session: Session = Depends(get_session)
+):
+    """Delete a story by its ID."""
+    ok = delete_story(session, story_id)
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Story not found"
+        )
+    return ActionResponse(ok=True, message="Story deleted successfully")

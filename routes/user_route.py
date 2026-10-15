@@ -18,6 +18,10 @@ class UserCreate(BaseModel):
     clerk_user_id: str
     name: str
 
+class UserUpdate(BaseModel):
+    clerk_user_id: Optional[str] = None
+    name: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: int
     clerk_user_id: str
@@ -105,7 +109,7 @@ def get_user(
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int, 
-    updated_user: User, 
+    updated_user: UserUpdate, 
     session: Session = Depends(get_session)
 ):
     """Update a user's information."""

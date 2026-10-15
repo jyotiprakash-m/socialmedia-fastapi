@@ -43,10 +43,21 @@ from .exceptions import (
     GraphQLClientInvalidResponseError,
 )
 from .find_friend_request import FindFriendRequest, FindFriendRequestFriend
+from .get_all_accepted_friends import (
+    GetAllAcceptedFriends,
+    GetAllAcceptedFriendsAsRecipient,
+    GetAllAcceptedFriendsAsRequester,
+)
 from .get_comment_by_id import GetCommentById, GetCommentByIdCommentByPk
 from .get_comments_for_post import GetCommentsForPost, GetCommentsForPostComment
 from .get_friend_ids_for_user import GetFriendIdsForUser, GetFriendIdsForUserFriend
-from .get_friends import GetFriends, GetFriendsFriend, GetFriendsFriendFriendUser
+from .get_friends import (
+    GetFriends,
+    GetFriendsAsRecipient,
+    GetFriendsAsRecipientUser,
+    GetFriendsAsRequester,
+    GetFriendsAsRequesterFriendUser,
+)
 from .get_pending_friend_requests import (
     GetPendingFriendRequests,
     GetPendingFriendRequestsFriend,
@@ -205,6 +216,9 @@ __all__ = [
     "DeleteUserDeleteUserByPk",
     "FindFriendRequest",
     "FindFriendRequestFriend",
+    "GetAllAcceptedFriends",
+    "GetAllAcceptedFriendsAsRecipient",
+    "GetAllAcceptedFriendsAsRequester",
     "GetCommentById",
     "GetCommentByIdCommentByPk",
     "GetCommentsForPost",
@@ -212,8 +226,10 @@ __all__ = [
     "GetFriendIdsForUser",
     "GetFriendIdsForUserFriend",
     "GetFriends",
-    "GetFriendsFriend",
-    "GetFriendsFriendFriendUser",
+    "GetFriendsAsRecipient",
+    "GetFriendsAsRecipientUser",
+    "GetFriendsAsRequester",
+    "GetFriendsAsRequesterFriendUser",
     "GetPendingFriendRequests",
     "GetPendingFriendRequestsFriend",
     "GetPendingFriendRequestsFriendUser",

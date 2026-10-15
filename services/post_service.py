@@ -43,14 +43,33 @@ def create_post(session: Any = None, post: Post = None) -> Post:
         raise RuntimeError("Failed to create post in Hasura")
     return _to_post(res.insert_post_one)
 
+# Get post by ID
+def get_post_by_id(session: Any = None, post_id: int = 0) -> Optional[Post]:
+    res = hasura_client.get_post_by_id(id=post_id)
+    if not res.post_by_pk:
+        return None
+    return _to_post(res.post_by_pk)
+
 # Get all posts for a user
 def get_posts_for_user(session: Any = None, user_id: int = 0) -> List[Post]:
     res = hasura_client.get_posts_for_user(user_id=user_id)
     return [_to_post(p) for p in res.post]
 
-# Get timeline posts for a user (their posts and friends' posts)
-def get_timeline_posts(session: Any = None, user_id: int = 0, friend_ids: List[int] = None) -> List[Post]:
-    allowed_user_ids = [user_id] + (friend_ids or [])
+# Get timeline posts for a user (their posts and all their friends' posts)
+def get_timeline_posts(session: Any = None, user_id: int = 0, friend_ids: Optional[List[int]] = None) -> List[Post]:
+    if friend_ids is None:
+        try:
+            friends_res = hasura_client.get_all_accepted_friends(user_id=user_id)
+            requester_friends = [f.friend_id for f in friends_res.as_requester]
+            recipient_friends = [f.user_id for f in friends_res.as_recipient]
+            resolved_friends = list(set(requester_friends + recipient_friends))
+            allowed_user_ids = list(set([user_id] + resolved_friends))
+        except Exception as e:
+            print(f"Error fetching friend IDs for timeline: {e}")
+            allowed_user_ids = [user_id]
+    else:
+        allowed_user_ids = list(set([user_id] + friend_ids))
+
     res = hasura_client.get_timeline_posts(user_ids=allowed_user_ids)
     return [_to_post(p) for p in res.post]
 
@@ -65,6 +84,13 @@ def add_comment(session: Any = None, comment: Comment = None) -> Comment:
     if not res.insert_comment_one:
         raise RuntimeError("Failed to add comment in Hasura")
     return _to_comment(res.insert_comment_one)
+
+# Get comment by ID
+def get_comment_by_id(session: Any = None, comment_id: int = 0) -> Optional[Comment]:
+    res = hasura_client.get_comment_by_id(id=comment_id)
+    if not res.comment_by_pk:
+        return None
+    return _to_comment(res.comment_by_pk)
 
 # Get comments for a post
 def get_comments_for_post(session: Any = None, post_id: int = 0) -> List[Comment]:

@@ -16,6 +16,7 @@ from .delete_post import DeletePost
 from .delete_story import DeleteStory
 from .delete_user import DeleteUser
 from .find_friend_request import FindFriendRequest
+from .get_all_accepted_friends import GetAllAcceptedFriends
 from .get_comment_by_id import GetCommentById
 from .get_comments_for_post import GetCommentsForPost
 from .get_friend_ids_for_user import GetFriendIdsForUser
@@ -165,12 +166,28 @@ class HasuraClient(BaseClient):
     def get_friends(self, user_id: int, **kwargs: Any) -> GetFriends:
         query = gql("""
             query GetFriends($user_id: Int!) {
-              friend(where: {user_id: {_eq: $user_id}, status: {_eq: "accepted"}}) {
+              as_requester: friend(
+                where: {user_id: {_eq: $user_id}, status: {_eq: "accepted"}}
+              ) {
                 id
                 user_id
                 friend_id
                 status
                 friend_user {
+                  id
+                  clerk_user_id
+                  name
+                  created_at
+                }
+              }
+              as_recipient: friend(
+                where: {friend_id: {_eq: $user_id}, status: {_eq: "accepted"}}
+              ) {
+                id
+                user_id
+                friend_id
+                status
+                user {
                   id
                   clerk_user_id
                   name
@@ -220,7 +237,9 @@ class HasuraClient(BaseClient):
     ) -> FindFriendRequest:
         query = gql("""
             query FindFriendRequest($user_id: Int!, $friend_id: Int!) {
-              friend(where: {user_id: {_eq: $user_id}, friend_id: {_eq: $friend_id}}) {
+              friend(
+                where: {_or: [{user_id: {_eq: $user_id}, friend_id: {_eq: $friend_id}}, {user_id: {_eq: $friend_id}, friend_id: {_eq: $user_id}}]}
+              ) {
                 id
                 user_id
                 friend_id
@@ -346,6 +365,33 @@ class HasuraClient(BaseClient):
         )
         data = self.get_data(response)
         return RemoveFriend.model_validate(data)
+
+    def get_all_accepted_friends(
+        self, user_id: int, **kwargs: Any
+    ) -> GetAllAcceptedFriends:
+        query = gql("""
+            query GetAllAcceptedFriends($user_id: Int!) {
+              as_requester: friend(
+                where: {user_id: {_eq: $user_id}, status: {_eq: "accepted"}}
+              ) {
+                friend_id
+              }
+              as_recipient: friend(
+                where: {friend_id: {_eq: $user_id}, status: {_eq: "accepted"}}
+              ) {
+                user_id
+              }
+            }
+            """)
+        variables: dict[str, object] = {"user_id": user_id}
+        response = self.execute(
+            query=query,
+            operation_name="GetAllAcceptedFriends",
+            variables=variables,
+            **kwargs,
+        )
+        data = self.get_data(response)
+        return GetAllAcceptedFriends.model_validate(data)
 
     def get_post_by_id(self, id: int, **kwargs: Any) -> GetPostById:
         query = gql("""

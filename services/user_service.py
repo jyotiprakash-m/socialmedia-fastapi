@@ -42,7 +42,7 @@ def create_user(session: Any = None, user: User = None) -> User:
     return _to_user(res.insert_user_one)
 
 # Update an existing user
-def update_user(session: Any = None, user_id: int = 0, updated_user: User = None) -> Optional[User]:
+def update_user(session: Any = None, user_id: int = 0, updated_user: Any = None) -> Optional[User]:
     user_dict = updated_user.dict(exclude_unset=True) if hasattr(updated_user, "dict") else updated_user.model_dump(exclude_unset=True)
     update_data = {}
     if "name" in user_dict and user_dict["name"] is not None:
@@ -50,9 +50,12 @@ def update_user(session: Any = None, user_id: int = 0, updated_user: User = None
     if "clerk_user_id" in user_dict and user_dict["clerk_user_id"] is not None:
         update_data["clerk_user_id"] = user_dict["clerk_user_id"]
 
+    if not update_data:
+        return get_user_by_id(session, user_id)
+
     res = hasura_client.update_user(
         id=user_id,
-        set=user_set_input(**update_data)
+        set_=user_set_input(**update_data)
     )
     if not res.update_user_by_pk:
         return None
@@ -67,9 +70,12 @@ def delete_user(session: Any = None, user_id: int = 0) -> bool:
 def get_friends(session: Any = None, user_id: int = 0) -> List[User]:
     res = hasura_client.get_friends(user_id=user_id)
     friends: List[User] = []
-    for f in res.friend:
+    for f in res.as_requester:
         if f.friend_user:
             friends.append(_to_user(f.friend_user))
+    for f in res.as_recipient:
+        if f.user:
+            friends.append(_to_user(f.user))
     return friends
 
 # Get all pending friend requests for a user

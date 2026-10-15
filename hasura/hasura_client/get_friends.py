@@ -7,18 +7,34 @@ from .base_model import BaseModel
 
 
 class GetFriends(BaseModel):
-    friend: list["GetFriendsFriend"]
+    as_requester: list["GetFriendsAsRequester"]
+    as_recipient: list["GetFriendsAsRecipient"]
 
 
-class GetFriendsFriend(BaseModel):
+class GetFriendsAsRequester(BaseModel):
     id: int
     user_id: int
     friend_id: int
     status: str
-    friend_user: "GetFriendsFriendFriendUser"
+    friend_user: "GetFriendsAsRequesterFriendUser"
 
 
-class GetFriendsFriendFriendUser(BaseModel):
+class GetFriendsAsRequesterFriendUser(BaseModel):
+    id: int
+    clerk_user_id: str
+    name: str
+    created_at: Any
+
+
+class GetFriendsAsRecipient(BaseModel):
+    id: int
+    user_id: int
+    friend_id: int
+    status: str
+    user: "GetFriendsAsRecipientUser"
+
+
+class GetFriendsAsRecipientUser(BaseModel):
     id: int
     clerk_user_id: str
     name: str
@@ -26,4 +42,5 @@ class GetFriendsFriendFriendUser(BaseModel):
 
 
 GetFriends.model_rebuild()
-GetFriendsFriend.model_rebuild()
+GetFriendsAsRequester.model_rebuild()
+GetFriendsAsRecipient.model_rebuild()
