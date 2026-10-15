@@ -11,6 +11,7 @@ from .create_post import CreatePost
 from .create_story import CreateStory
 from .create_user import CreateUser
 from .delete_comment import DeleteComment
+from .delete_expired_stories import DeleteExpiredStories
 from .delete_post import DeletePost
 from .delete_story import DeleteStory
 from .delete_user import DeleteUser
@@ -554,6 +555,24 @@ class HasuraClient(BaseClient):
         )
         data = self.get_data(response)
         return DeleteStory.model_validate(data)
+
+    def delete_expired_stories(self, now: Any, **kwargs: Any) -> DeleteExpiredStories:
+        query = gql("""
+            mutation DeleteExpiredStories($now: timestamptz!) {
+              delete_story(where: {expires_at: {_lt: $now}}) {
+                affected_rows
+              }
+            }
+            """)
+        variables: dict[str, object] = {"now": now}
+        response = self.execute(
+            query=query,
+            operation_name="DeleteExpiredStories",
+            variables=variables,
+            **kwargs,
+        )
+        data = self.get_data(response)
+        return DeleteExpiredStories.model_validate(data)
 
     def get_user_by_id(self, id: int, **kwargs: Any) -> GetUserById:
         query = gql("""

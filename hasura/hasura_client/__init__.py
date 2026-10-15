@@ -9,6 +9,10 @@ from .create_post import CreatePost, CreatePostInsertPostOne
 from .create_story import CreateStory, CreateStoryInsertStoryOne
 from .create_user import CreateUser, CreateUserInsertUserOne
 from .delete_comment import DeleteComment, DeleteCommentDeleteCommentByPk
+from .delete_expired_stories import (
+    DeleteExpiredStories,
+    DeleteExpiredStoriesDeleteStory,
+)
 from .delete_post import DeletePost, DeletePostDeletePostByPk
 from .delete_story import DeleteStory, DeleteStoryDeleteStoryByPk
 from .delete_user import DeleteUser, DeleteUserDeleteUserByPk
@@ -191,6 +195,8 @@ __all__ = [
     "CreateUserInsertUserOne",
     "DeleteComment",
     "DeleteCommentDeleteCommentByPk",
+    "DeleteExpiredStories",
+    "DeleteExpiredStoriesDeleteStory",
     "DeletePost",
     "DeletePostDeletePostByPk",
     "DeleteStory",

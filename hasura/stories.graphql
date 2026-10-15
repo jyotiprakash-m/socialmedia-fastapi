@@ -42,3 +42,10 @@ mutation DeleteStory($id: Int!) {
     id
   }
 }
+
+mutation DeleteExpiredStories($now: timestamptz!) {
+  delete_story(where: {expires_at: {_lt: $now}}) {
+    affected_rows
+  }
+}
+

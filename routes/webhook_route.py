@@ -115,3 +115,48 @@ def handle_friend_status_updated(
         },
         "notification": notification
     }
+
+class HasuraCronTriggerBody(BaseModel):
+    scheduled_time: str
+    payload: Optional[Dict[str, Any]] = None
+    name: str
+    id: Optional[str] = None
+
+@router.post("/cron/cleanup-stories")
+def handle_cleanup_stories_cron(
+    body: HasuraCronTriggerBody,
+    x_webhook_secret: Optional[str] = Header(None, alias="x-webhook-secret")
+):
+    """
+    Cron Trigger Webhook:
+    Fires on a scheduled interval (e.g. every hour) from Hasura.
+    Cleans up all expired stories where expires_at < current_timestamp.
+    """
+    from datetime import datetime, timezone
+    from hasura import hasura_client
+
+    # 1. Security Verification
+    expected_secret = settings.WEBHOOK_SECRET
+    if expected_secret and x_webhook_secret != expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized: Invalid x-webhook-secret header"
+        )
+
+    # 2. Execute Cleanup via Hasura GraphQL mutation
+    now_iso = datetime.now(timezone.utc).isoformat()
+    res = hasura_client.delete_expired_stories(now=now_iso)
+    deleted_count = res.delete_story.affected_rows if res.delete_story else 0
+
+    print(f"⏰ [Hasura Cron Trigger] '{body.name}' executed at {body.scheduled_time}")
+    print(f"   Custom Payload: {body.payload}")
+    print(f"   Deleted {deleted_count} expired stories.")
+
+    return {
+        "ok": True,
+        "cron_name": body.name,
+        "scheduled_time": body.scheduled_time,
+        "deleted_stories_count": deleted_count,
+        "timestamp": now_iso
+    }
+
