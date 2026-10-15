@@ -1,6 +1,4 @@
 version: 3
-endpoint: https://genuine-eft-93.hasura.app
-admin_secret: mb5qpKmv5en4O22fFJwaRQ7xu9iJWsv0qY0BEXBEebfwN89PaNXBJQVcEtj4Aogq
 metadata_directory: metadata
 actions:
   kind: synchronous
