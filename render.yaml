@@ -14,4 +14,7 @@ services:
         sync: false
       - key: HASURA_ADMIN_SECRET
         sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+
 

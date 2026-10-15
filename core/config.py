@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///database.db"
     HASURA_GRAPHQL_URL: Optional[str] = None
     HASURA_ADMIN_SECRET: Optional[str] = None
+    WEBHOOK_SECRET: str = "super-secret-hasura-key-2026"
+
 
     class Config:
         env_file = ".env"
