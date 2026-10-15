@@ -10,3 +10,8 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: HASURA_GRAPHQL_URL
+        sync: false
+      - key: HASURA_ADMIN_SECRET
+        sync: false
+
