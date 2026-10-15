@@ -12,4 +12,5 @@ dependencies = [
     "sqlmodel>=0.0.30",
     "uvicorn>=0.40.0",
     "sqladmin>=0.2.6",
+    "greenlet>=3.3.0",
 ]
