@@ -19,6 +19,13 @@ class PostCreate(BaseModel):
     media_url: Optional[str] = None
     media_type: Optional[str] = None 
 
+class PostScheduleRequest(BaseModel):
+    content: str
+    user_id: int
+    schedule_at: str  # ISO timestamp
+    media_url: Optional[str] = None
+    media_type: Optional[str] = None
+
 class PostResponse(BaseModel):
     id: int
     content: str
@@ -60,6 +67,54 @@ def create_post(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error creating post: {str(e)}"
         )
+
+@router.post("/schedule", status_code=status.HTTP_201_CREATED)
+def schedule_post(req: PostScheduleRequest):
+    """Schedule a post to be published at a future timestamp via Hasura Scheduled Events."""
+    from services.scheduler_service import create_one_off_scheduled_event
+    from datetime import datetime, timezone
+
+    try:
+        schedule_time = datetime.fromisoformat(req.schedule_at)
+        if schedule_time.tzinfo is None:
+            schedule_time = schedule_time.replace(tzinfo=timezone.utc)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid schedule_at format (use ISO 8601): {str(e)}"
+        )
+
+    if schedule_time <= datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="schedule_at must be in the future"
+        )
+
+    webhook_url = "https://socialmedia-fastapi-yx0y.onrender.com/webhooks/scheduled/publish-post"
+    try:
+        event_id = create_one_off_scheduled_event(
+            webhook_url=webhook_url,
+            schedule_at=schedule_time,
+            payload={
+                "user_id": req.user_id,
+                "content": req.content,
+                "media_url": req.media_url,
+                "media_type": req.media_type
+            },
+            comment=f"Scheduled post for user {req.user_id}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to schedule event in Hasura: {str(e)}"
+        )
+
+    return {
+        "ok": True,
+        "event_id": event_id,
+        "schedule_at": schedule_time.isoformat(),
+        "message": f"Post scheduled successfully for {schedule_time.isoformat()}"
+    }
 
 @router.get("/user/{user_id}", response_model=List[PostResponse])
 def get_posts_for_user(

@@ -160,3 +160,67 @@ def handle_cleanup_stories_cron(
         "timestamp": now_iso
     }
 
+class HasuraScheduledEventBody(BaseModel):
+    scheduled_time: str
+    payload: Dict[str, Any]
+    created_at: Optional[str] = None
+    id: str
+
+@router.post("/scheduled/publish-post")
+def handle_publish_scheduled_post(
+    body: HasuraScheduledEventBody,
+    x_webhook_secret: Optional[str] = Header(None, alias="x-webhook-secret")
+):
+    """
+    One-Off Scheduled Event Webhook:
+    Fires exactly once at the timestamp requested when the event was scheduled.
+    Publishes a scheduled post automatically into PostgreSQL.
+    """
+    from services.post_service import create_post
+    from models import Post
+
+    # 1. Security Verification
+    expected_secret = settings.WEBHOOK_SECRET
+    if expected_secret and x_webhook_secret != expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized: Invalid x-webhook-secret header"
+        )
+
+    # 2. Extract Post Details from Scheduled Payload
+    payload = body.payload or {}
+    user_id = payload.get("user_id")
+    content = payload.get("content")
+    media_url = payload.get("media_url")
+    media_type = payload.get("media_type")
+
+    if not user_id or not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required fields (user_id, content) in scheduled payload"
+        )
+
+    print(f"🚀 [One-off Scheduled Event Fired] Event ID: {body.id}")
+    print(f"   Publishing post for User {user_id}: '{content}'")
+
+    post_model = Post(
+        user_id=user_id,
+        content=content,
+        media_url=media_url,
+        media_type=media_type
+    )
+    published_post = create_post(post=post_model)
+
+    return {
+        "ok": True,
+        "event_id": body.id,
+        "scheduled_time": body.scheduled_time,
+        "published_post": {
+            "id": published_post.id,
+            "content": published_post.content,
+            "user_id": published_post.user_id,
+            "created_at": published_post.created_at.isoformat()
+        }
+    }
+
+
