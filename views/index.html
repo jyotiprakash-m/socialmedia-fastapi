@@ -2,264 +2,206 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sociva — Connect, Share & Experience Real-Time Stories</title>
-  <meta name="description" content="Sociva is a next-generation social platform featuring real-time stories, scheduled posts, threaded conversations, and bidirectional friend networks powered by FastAPI and Hasura.">
-
-  <!-- Favicon -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sociva — Share moments with your people</title>
+  <meta name="description" content="Sociva is a social network for sharing posts, 24-hour stories and scheduled updates with your friends.">
+  <meta name="theme-color" content="#10101A">
   <link rel="icon" type="image/png" href="/static/sociva_logo.png">
 
-  <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- FontAwesome 6 Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <!-- Master Stylesheet -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="/views/index.css">
 </head>
 <body>
 
-  <div class="app-container">
-    
-    <!-- Left Navigation Sidebar -->
+  <!-- Mobile top bar -->
+  <header class="mobile-topbar">
+    <a href="#/" class="brand">
+      <img src="/static/sociva_logo.png" alt="">
+      <span class="gradient-text">Sociva</span>
+    </a>
+    <select class="select" id="accountSelectMobile" aria-label="Switch account"></select>
+  </header>
+
+  <div class="app">
+    <!-- Left sidebar -->
     <aside class="sidebar">
-      <div>
-        <a href="/" class="brand-wrapper" id="brandLogoLink">
-          <img src="/static/sociva_logo.png" alt="Sociva Logo" class="brand-logo-img">
-          <h1 class="brand-title">Sociva</h1>
+      <a href="#/" class="brand" id="brandLink">
+        <img src="/static/sociva_logo.png" alt="Sociva logo">
+        <span class="gradient-text">Sociva</span>
+      </a>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="#/" class="nav-link" data-nav="home" id="navHome"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="#/explore" class="nav-link" data-nav="explore" id="navExplore"><i class="fa-solid fa-compass"></i><span>Explore</span></a>
+        <a href="#/friends" class="nav-link" data-nav="friends" id="navFriends">
+          <i class="fa-solid fa-user-group"></i><span>Friends</span>
+          <span class="badge hidden" data-pending-badge>0</span>
         </a>
+        <button class="nav-link" data-action="open-composer" id="navCreate"><i class="fa-regular fa-square-plus"></i><span>Create</span></button>
+        <button class="nav-link" data-action="open-add-story" id="navStory"><i class="fa-solid fa-circle-plus"></i><span>Add story</span></button>
+        <a href="#/profile" class="nav-link" data-nav="profile" id="navProfile"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
 
-        <!-- Navigation Menu -->
-        <nav>
-          <ul class="nav-menu">
-            <li>
-              <a href="#" class="nav-item active" data-action="feed" id="navFeed">
-                <i class="fas fa-home"></i>
-                <span>Home Feed</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-action="friends" id="navFriends">
-                <i class="fas fa-user-friends"></i>
-                <span>Friends</span>
-                <span class="nav-badge" id="pendingBadge" style="display: none;">0</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="nav-item" data-action="story" id="navNewStory">
-                <i class="fas fa-plus-circle"></i>
-                <span>Add Story</span>
-              </a>
-            </li>
-            <li>
-              <a href="/docs" target="_blank" class="nav-item" id="navApiDocs">
-                <i class="fas fa-code"></i>
-                <span>API Docs</span>
-              </a>
-            </li>
-            <li>
-              <a href="/admin/" target="_blank" class="nav-item" id="navAdmin">
-                <i class="fas fa-database"></i>
-                <span>SQLAdmin</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-
-      <!-- User Profile / Switcher Widget -->
-      <div class="user-switcher-card">
-        <div class="user-switcher-header">
-          <span>Logged-in User</span>
-          <i class="fas fa-shield-alt" style="color: var(--color-coral);" title="Active Session"></i>
-        </div>
-        <div class="user-pill-container">
-          <div class="user-avatar-small" id="currentAvatarText">JP</div>
-          <select id="userSwitcherSelect" class="user-switcher-select" title="Switch active simulated user">
-            <!-- Populated via app.js -->
-          </select>
+      <div class="account-card">
+        <div class="account-row" id="accountSummary"></div>
+        <div class="account-actions">
+          <select class="select" id="accountSelect" aria-label="Switch account"></select>
+          <button class="icon-btn" data-action="open-create-account" title="Create account" id="btnNewAccount"><i class="fa-solid fa-user-plus"></i></button>
         </div>
       </div>
     </aside>
 
-    <!-- Center Main Feed Area -->
-    <main class="main-content">
-      
-      <!-- Top Stories Tray -->
-      <section class="stories-tray-card" aria-label="Active Stories">
-        <div class="stories-scroll" id="storiesContainer">
-          <!-- Dynamically populated via app.js -->
-        </div>
-      </section>
-
-      <!-- Post Creation Composer -->
-      <section class="create-post-card" aria-label="Create Post">
-        <div class="create-post-top">
-          <div class="create-avatar" id="composerAvatarText">JP</div>
-          <textarea 
-            id="composerContent" 
-            class="create-textarea" 
-            placeholder="What's happening? Share a thought, image or schedule for later..."
-            rows="2"
-          ></textarea>
-        </div>
-
-        <!-- Optional Expandable Media Input -->
-        <div class="composer-extras" id="composerMediaExtras">
-          <div style="display: flex; gap: 10px;">
-            <input type="url" id="composerMediaUrl" class="input-field" style="flex: 1;" placeholder="Media URL (e.g. https://images.unsplash.com/...)">
-            <select id="composerMediaType" class="input-field" style="width: 120px;">
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Optional Expandable Schedule Input -->
-        <div class="composer-extras" id="composerScheduleExtras">
-          <label style="font-size: 0.8rem; font-weight: 700; color: var(--color-coral);">
-            <i class="far fa-clock"></i> Schedule for Future (Hasura One-Off Event):
-          </label>
-          <input type="datetime-local" id="composerScheduleTime" class="input-field">
-        </div>
-
-        <div class="create-post-bottom">
-          <div class="create-tools">
-            <button class="tool-btn" id="btnToggleMedia" title="Attach Media URL">
-              <i class="far fa-image"></i>
-            </button>
-            <button class="tool-btn" id="btnToggleSchedule" title="Schedule for Later (Hasura Event)">
-              <i class="far fa-clock"></i>
-            </button>
-          </div>
-          <button class="btn-primary" id="btnPublishPost">
-            <i class="fas fa-paper-plane"></i> Post
-          </button>
-        </div>
-      </section>
-
-      <!-- Posts Timeline Stream -->
-      <section id="feedContainer" aria-label="Timeline Posts">
-        <!-- Dynamically rendered posts -->
-      </section>
-
-    </main>
-
-    <!-- Right Sidebar (People Suggestions & Tech Stack) -->
-    <aside class="right-sidebar">
-      
-      <!-- Suggestions Card -->
-      <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 20px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-          <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--color-text-primary);">Suggested People</h3>
-          <button onclick="openFriendsModal()" style="background: transparent; border: none; color: var(--color-pink); font-size: 0.8rem; font-weight: 700; cursor: pointer;">See All</button>
-        </div>
-        <div id="sidebarSuggestions" style="display: flex; flex-direction: column; gap: 14px;">
-          <!-- Populated via app.js -->
+    <!-- Main view -->
+    <main class="main">
+      <div id="view">
+        <div class="boot">
+          <img src="/static/sociva_logo.png" alt="">
+          <p>Loading Sociva…</p>
         </div>
       </div>
+    </main>
 
-      <!-- Live Architecture Widget -->
-      <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(192, 38, 211, 0.05) 100%); border: 1px solid rgba(192, 38, 211, 0.25); border-radius: var(--radius-lg); padding: 20px;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 10px #10B981;"></span>
-          <h4 style="font-size: 0.88rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-pink);">Sociva Engine Live</h4>
-        </div>
-        <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: var(--color-text-secondary);">
-          <li><i class="fas fa-check" style="color: #10B981; margin-right: 6px;"></i> FastAPI Async Backend</li>
-          <li><i class="fas fa-check" style="color: #10B981; margin-right: 6px;"></i> Hasura Cloud GraphQL Engine</li>
-          <li><i class="fas fa-check" style="color: #10B981; margin-right: 6px;"></i> Neon Serverless PostgreSQL</li>
-          <li><i class="fas fa-check" style="color: #10B981; margin-right: 6px;"></i> Hasura Event & Cron Triggers</li>
-          <li><i class="fas fa-check" style="color: #10B981; margin-right: 6px;"></i> One-Off Scheduled Events</li>
+    <!-- Right rail -->
+    <aside class="rail">
+      <div class="card card-pad" id="railMe"></div>
+
+      <div class="card card-pad">
+        <div class="card-title">Suggested for you <a href="#/explore">See all</a></div>
+        <div id="railSuggestions"></div>
+      </div>
+
+      <div class="card card-pad" style="background: var(--gradient-soft); border-color: rgba(192,38,211,.25);">
+        <div class="card-title" style="justify-content:flex-start; gap:10px;"><span class="live-dot"></span> Powered by</div>
+        <ul class="stack-list">
+          <li><i class="fa-solid fa-bolt"></i>FastAPI backend</li>
+          <li><i class="fa-solid fa-diagram-project"></i>Hasura GraphQL engine</li>
+          <li><i class="fa-solid fa-database"></i>Neon PostgreSQL</li>
+          <li><i class="fa-solid fa-clock-rotate-left"></i>Cron cleanup for stories</li>
+          <li><i class="fa-solid fa-calendar-check"></i>Scheduled post events</li>
         </ul>
       </div>
 
-      <!-- Footer Info -->
-      <footer style="font-size: 0.78rem; color: var(--color-text-muted); line-height: 1.6; padding: 0 4px;">
-        &copy; 2026 Sociva. Built with passion using FastAPI & Hasura Engine.
+      <footer class="rail-footer">
+        <a href="/docs" target="_blank" rel="noopener">API Docs</a> ·
+        <a href="/redoc" target="_blank" rel="noopener">ReDoc</a> ·
+        <a href="/admin/" target="_blank" rel="noopener">Admin</a><br>
+        © 2026 Sociva
       </footer>
     </aside>
-
   </div>
 
-  <!-- ==========================================================================
-       Modals
-       ========================================================================== -->
-  
-  <!-- 1. Fullscreen Story Viewer Modal -->
-  <div class="modal-overlay" id="storyModal" onclick="if(event.target === this) closeStoryModal()">
-    <div class="story-viewer-modal">
-      <div class="story-progress-bar-container">
-        <div class="story-progress-bar">
-          <div class="story-progress-fill" id="storyProgressBar"></div>
-        </div>
+  <!-- Mobile bottom nav -->
+  <nav class="bottom-nav" aria-label="Mobile">
+    <a href="#/" data-nav="home" aria-label="Home"><i class="fa-solid fa-house"></i></a>
+    <a href="#/explore" data-nav="explore" aria-label="Explore"><i class="fa-solid fa-compass"></i></a>
+    <button class="create" data-action="open-composer" aria-label="Create"><i class="fa-solid fa-plus"></i></button>
+    <a href="#/friends" data-nav="friends" aria-label="Friends"><i class="fa-solid fa-user-group"></i><span class="badge hidden" data-pending-badge>0</span></a>
+    <a href="#/profile" data-nav="profile" aria-label="Profile"><i class="fa-regular fa-user"></i></a>
+  </nav>
+
+  <!-- Create post modal -->
+  <div class="modal" id="composerModal" role="dialog" aria-modal="true" aria-labelledby="composerModalTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 id="composerModalTitle">Create post</h2>
+        <button class="icon-btn" data-action="close-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="story-viewer-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div class="user-avatar-small" style="width: 32px; height: 32px; font-size: 0.8rem;"><i class="fas fa-user"></i></div>
-          <div>
-            <div id="storyAuthorName" style="font-weight: 700; font-size: 0.9rem;">Author</div>
-            <div id="storyAuthorTime" style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.7);">Time</div>
-          </div>
-        </div>
-        <button class="modal-close-btn" onclick="closeStoryModal()" style="color: white; font-size: 1.5rem;">&times;</button>
-      </div>
-      <div id="storyMediaContainer" style="flex: 1; display: flex; align-items: center; justify-content: center; background: #000;">
-        <!-- Image or video placed here -->
-      </div>
+      <div class="modal-body" id="composerModalBody"></div>
     </div>
   </div>
 
-  <!-- 2. Create Story Modal -->
-  <div class="modal-overlay" id="newStoryModal" onclick="if(event.target === this) closeNewStoryModal()">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 class="modal-title"><i class="fas fa-camera-retro"></i> Add 24h Story</h3>
-        <button class="modal-close-btn" onclick="closeNewStoryModal()">&times;</button>
+  <!-- Add story modal -->
+  <div class="modal" id="storyModal" role="dialog" aria-modal="true" aria-labelledby="storyModalTitle">
+    <form class="modal-box" id="storyForm" autocomplete="off">
+      <div class="modal-head">
+        <h2 id="storyModalTitle">Add to your story</h2>
+        <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form class="modal-body" onsubmit="handleCreateStory(event)">
-        <p style="font-size: 0.88rem; color: var(--color-text-secondary);">
-          Stories are shared with all your mutual friends and automatically expire in 24 hours via Hasura Cron Triggers.
-        </p>
-        <div>
-          <label style="font-size: 0.82rem; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Media URL</label>
-          <input type="url" id="storyMediaUrl" class="input-field" style="width: 100%;" placeholder="https://images.unsplash.com/photo-..." required>
+      <div class="modal-body">
+        <p class="modal-hint">Your story is visible to your friends for 24 hours, then removed automatically.</p>
+        <div class="field">
+          <label for="storyUrl">Image or video URL</label>
+          <input class="input" type="url" id="storyUrl" placeholder="https://images.unsplash.com/photo-…" required>
         </div>
-        <div>
-          <label style="font-size: 0.82rem; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Media Type</label>
-          <select id="storyMediaType" class="input-field" style="width: 100%;">
+        <div class="field">
+          <label for="storyType">Type</label>
+          <select class="select" id="storyType">
             <option value="image">Photo</option>
             <option value="video">Video</option>
           </select>
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-          <button type="button" class="btn-secondary" onclick="closeNewStoryModal()">Cancel</button>
-          <button type="submit" class="btn-primary"><i class="fas fa-sparkles"></i> Share Story</button>
+        <div class="composer-preview hidden" id="storyPreview"></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="storySubmit"><i class="fa-solid fa-wand-magic-sparkles"></i> Share story</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Account modal (create / edit) -->
+  <div class="modal" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+    <form class="modal-box" id="accountForm" autocomplete="off">
+      <div class="modal-head">
+        <h2 id="accountModalTitle">Create account</h2>
+        <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="accountName">Full name</label>
+          <input class="input" id="accountName" maxlength="60" required placeholder="e.g. Priya Sharma">
         </div>
-      </form>
+        <div class="field" id="accountHandleField">
+          <label for="accountHandle">Username</label>
+          <input class="input" id="accountHandle" maxlength="40" pattern="[A-Za-z0-9_.\-]+" placeholder="priya.sharma">
+          <small>Letters, numbers, dots, dashes and underscores. Leave blank to auto-generate.</small>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="accountSubmit">Create account</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Post detail modal -->
+  <div class="modal" id="postModal" role="dialog" aria-modal="true" aria-label="Post">
+    <div class="modal-box wide">
+      <div class="modal-head">
+        <h2>Post</h2>
+        <button class="icon-btn" data-action="close-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="postModalBody" style="padding:0;"></div>
     </div>
   </div>
 
-  <!-- 3. Friends, Requests & Discovery Modal -->
-  <div class="modal-overlay" id="friendsModal" onclick="if(event.target === this) closeFriendsModal()">
-    <div class="modal-box" style="max-width: 580px;">
-      <div class="modal-header">
-        <h3 class="modal-title"><i class="fas fa-user-friends"></i> Social Connections & Requests</h3>
-        <button class="modal-close-btn" onclick="closeFriendsModal()">&times;</button>
+  <!-- Story viewer -->
+  <div class="modal story-viewer" id="storyViewer" role="dialog" aria-modal="true" aria-label="Story viewer">
+    <button class="story-nav prev" data-action="story-prev" aria-label="Previous story"><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="story-stage">
+      <div class="story-bars" id="storyBars"></div>
+      <div class="story-top">
+        <div id="storyAvatar"></div>
+        <div class="who">
+          <strong id="storyWho"></strong>
+          <small id="storyWhen"></small>
+        </div>
+        <button class="icon-btn hidden" data-action="story-delete" id="storyDelete" title="Delete story"><i class="fa-regular fa-trash-can"></i></button>
+        <button class="icon-btn" data-action="story-pause" id="storyPause" title="Pause"><i class="fa-solid fa-pause"></i></button>
+        <button class="icon-btn" data-action="story-close" title="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body" id="friendsModalContent" style="max-height: 70vh; overflow-y: auto;">
-        <!-- Dynamically rendered via app.js -->
-      </div>
+      <div id="storyMedia" style="width:100%;height:100%;"></div>
+      <div class="story-tap prev" data-action="story-prev"></div>
+      <div class="story-tap next" data-action="story-next"></div>
     </div>
+    <button class="story-nav next" data-action="story-next" aria-label="Next story"><i class="fa-solid fa-chevron-right"></i></button>
   </div>
 
-  <!-- Floating Toast Notifications -->
-  <div class="toast-container" id="toastContainer"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 
-  <!-- Client Application Script -->
   <script src="/views/app.js"></script>
 </body>
 </html>
