@@ -57,7 +57,7 @@ class StoryAdmin(ModelView, model=Story):
     column_list = ["id", "user_id", "media_url", "media_type" , "created_at", "expires_at"]
 
 class FriendAdmin(ModelView, model=Friend):
-    column_list = ["id", "user_id", "friend_user_id", "created_at"]
+    column_list = ["id", "user_id", "friend_id", "status"]
     
 admin.add_view(UserAdmin)
 admin.add_view(PostAdmin)

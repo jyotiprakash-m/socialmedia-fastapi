@@ -1,0 +1,60 @@
+query GetPostById($id: Int!) {
+  post_by_pk(id: $id) {
+    id
+    user_id
+    content
+    media_url
+    media_type
+    created_at
+    updated_at
+  }
+}
+
+query GetPostsForUser($user_id: Int!) {
+  post(where: {user_id: {_eq: $user_id}}, order_by: {created_at: desc}) {
+    id
+    user_id
+    content
+    media_url
+    media_type
+    created_at
+    updated_at
+  }
+}
+
+query GetTimelinePosts($user_ids: [Int!]!) {
+  post(where: {user_id: {_in: $user_ids}}, order_by: {created_at: desc}) {
+    id
+    user_id
+    content
+    media_url
+    media_type
+    created_at
+    updated_at
+  }
+}
+
+mutation CreatePost($user_id: Int!, $content: String!, $media_url: String, $media_type: String) {
+  insert_post_one(
+    object: {
+      user_id: $user_id
+      content: $content
+      media_url: $media_url
+      media_type: $media_type
+    }
+  ) {
+    id
+    user_id
+    content
+    media_url
+    media_type
+    created_at
+    updated_at
+  }
+}
+
+mutation DeletePost($id: Int!) {
+  delete_post_by_pk(id: $id) {
+    id
+  }
+}

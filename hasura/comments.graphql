@@ -1,0 +1,56 @@
+query GetCommentById($id: Int!) {
+  comment_by_pk(id: $id) {
+    id
+    post_id
+    user_id
+    parent_comment_id
+    content
+    created_at
+  }
+}
+
+query GetCommentsForPost($post_id: Int!) {
+  comment(where: {post_id: {_eq: $post_id}}, order_by: {created_at: asc}) {
+    id
+    post_id
+    user_id
+    parent_comment_id
+    content
+    created_at
+  }
+}
+
+query GetRepliesForComment($comment_id: Int!) {
+  comment(where: {parent_comment_id: {_eq: $comment_id}}, order_by: {created_at: asc}) {
+    id
+    post_id
+    user_id
+    parent_comment_id
+    content
+    created_at
+  }
+}
+
+mutation AddComment($post_id: Int!, $user_id: Int!, $content: String!, $parent_comment_id: Int) {
+  insert_comment_one(
+    object: {
+      post_id: $post_id
+      user_id: $user_id
+      content: $content
+      parent_comment_id: $parent_comment_id
+    }
+  ) {
+    id
+    post_id
+    user_id
+    parent_comment_id
+    content
+    created_at
+  }
+}
+
+mutation DeleteComment($id: Int!) {
+  delete_comment_by_pk(id: $id) {
+    id
+  }
+}

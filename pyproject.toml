@@ -13,4 +13,27 @@ dependencies = [
     "uvicorn>=0.40.0",
     "sqladmin>=0.2.6",
     "greenlet>=3.3.0",
+    "psycopg2-binary>=2.9.13",
+    "ariadne-codegen>=0.19.0",
+    "httpx>=0.28.1",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "hasura*", "models*", "routes*", "services*"]
+
+[project.scripts]
+codegen = "hasura.codegen:run"
+
+[tool.ariadne-codegen]
+queries_path = "hasura"
+target_package_name = "hasura_client"
+target_package_path = "hasura"
+client_name = "HasuraClient"
+async_client = false
+
+

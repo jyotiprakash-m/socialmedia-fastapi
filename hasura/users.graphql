@@ -1,0 +1,50 @@
+query GetUserById($id: Int!) {
+  user_by_pk(id: $id) {
+    id
+    clerk_user_id
+    name
+    created_at
+  }
+}
+
+query ListUsers($offset: Int = 0, $limit: Int = 100) {
+  user(offset: $offset, limit: $limit, order_by: {id: asc}) {
+    id
+    clerk_user_id
+    name
+    created_at
+  }
+}
+
+mutation CreateUser($clerk_user_id: String!, $name: String!) {
+  insert_user_one(object: {clerk_user_id: $clerk_user_id, name: $name}) {
+    id
+    clerk_user_id
+    name
+    created_at
+  }
+}
+
+mutation UpdateUser($id: Int!, $set: user_set_input!) {
+  update_user_by_pk(pk_columns: {id: $id}, _set: $set) {
+    id
+    clerk_user_id
+    name
+    created_at
+  }
+}
+
+mutation DeleteUser($id: Int!) {
+  delete_user_by_pk(id: $id) {
+    id
+  }
+}
+
+query SearchUsers($query: String!) {
+  user(where: {name: {_ilike: $query}}, order_by: {name: asc}) {
+    id
+    clerk_user_id
+    name
+    created_at
+  }
+}

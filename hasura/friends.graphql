@@ -1,0 +1,86 @@
+query GetFriends($user_id: Int!) {
+  friend(where: {user_id: {_eq: $user_id}, status: {_eq: "accepted"}}) {
+    id
+    user_id
+    friend_id
+    status
+    friend_user {
+      id
+      clerk_user_id
+      name
+      created_at
+    }
+  }
+}
+
+query GetPendingFriendRequests($user_id: Int!) {
+  friend(where: {friend_id: {_eq: $user_id}, status: {_eq: "pending"}}) {
+    id
+    user_id
+    friend_id
+    status
+    user {
+      id
+      clerk_user_id
+      name
+      created_at
+    }
+  }
+}
+
+query FindFriendRequest($user_id: Int!, $friend_id: Int!) {
+  friend(where: {user_id: {_eq: $user_id}, friend_id: {_eq: $friend_id}}) {
+    id
+    user_id
+    friend_id
+    status
+  }
+}
+
+query GetFriendIdsForUser($user_id: Int!) {
+  friend(where: {user_id: {_eq: $user_id}, status: {_eq: "accepted"}}) {
+    friend_id
+  }
+}
+
+mutation AcceptFriendRequest($user_id: Int!, $friend_id: Int!) {
+  update_friend(
+    where: {user_id: {_eq: $friend_id}, friend_id: {_eq: $user_id}, status: {_eq: "pending"}}
+    _set: {status: "accepted"}
+  ) {
+    affected_rows
+  }
+}
+
+mutation RejectFriendRequest($user_id: Int!, $friend_id: Int!) {
+  delete_friend(
+    where: {user_id: {_eq: $friend_id}, friend_id: {_eq: $user_id}, status: {_eq: "pending"}}
+  ) {
+    affected_rows
+  }
+}
+
+mutation SendFriendRequest($user_id: Int!, $friend_id: Int!) {
+  insert_friend_one(
+    object: {user_id: $user_id, friend_id: $friend_id, status: "pending"}
+  ) {
+    id
+    user_id
+    friend_id
+    status
+  }
+}
+
+mutation RemoveFriend($user_id: Int!, $friend_id: Int!) {
+  delete_friend(
+    where: {
+      status: {_eq: "accepted"}
+      _or: [
+        {user_id: {_eq: $user_id}, friend_id: {_eq: $friend_id}}
+        {user_id: {_eq: $friend_id}, friend_id: {_eq: $user_id}}
+      ]
+    }
+  ) {
+    affected_rows
+  }
+}

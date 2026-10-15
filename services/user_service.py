@@ -1,142 +1,113 @@
+from typing import List, Optional, Any
+from datetime import datetime, timezone
+from models import User
+from hasura import hasura_client
+from hasura.hasura_client.input_types import user_set_input
 
-from sqlmodel import Session, select
-from models import User, Friend
-from typing import List, Optional, cast, Any
-from sqlalchemy.sql import ColumnElement
+def _parse_dt(val: Any) -> datetime:
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        return datetime.fromisoformat(val)
+    return datetime.now(timezone.utc)
+
+def _to_user(u: Any) -> User:
+    return User(
+        id=u.id,
+        clerk_user_id=u.clerk_user_id,
+        name=u.name,
+        created_at=_parse_dt(u.created_at)
+    )
 
 # Get user by ID
-def get_user_by_id(session: Session, user_id: int) -> User | None:
-    statement = select(User).where(User.id == user_id)
-    result = session.exec(statement).first()
-    return result
+def get_user_by_id(session: Any = None, user_id: int = 0) -> Optional[User]:
+    res = hasura_client.get_user_by_id(id=user_id)
+    if not res.user_by_pk:
+        return None
+    return _to_user(res.user_by_pk)
 
 # List users with pagination
-def list_users(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
-    statement = select(User).offset(skip).limit(limit)
-    results = session.exec(statement).all()
-    return list(results)
+def list_users(session: Any = None, skip: int = 0, limit: int = 100) -> List[User]:
+    res = hasura_client.list_users(offset=skip, limit=limit)
+    return [_to_user(u) for u in res.user]
 
 # Create a new user
-def create_user(session: Session, user: User) -> User:
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
+def create_user(session: Any = None, user: User = None) -> User:
+    res = hasura_client.create_user(
+        clerk_user_id=user.clerk_user_id,
+        name=user.name
+    )
+    if not res.insert_user_one:
+        raise RuntimeError("Failed to create user in Hasura")
+    return _to_user(res.insert_user_one)
 
 # Update an existing user
-def update_user(session: Session, user_id: int, updated_user: User) -> Optional[User]:
-    existing_user = get_user_by_id(session, user_id)
-    if not existing_user:
+def update_user(session: Any = None, user_id: int = 0, updated_user: User = None) -> Optional[User]:
+    user_dict = updated_user.dict(exclude_unset=True) if hasattr(updated_user, "dict") else updated_user.model_dump(exclude_unset=True)
+    update_data = {}
+    if "name" in user_dict and user_dict["name"] is not None:
+        update_data["name"] = user_dict["name"]
+    if "clerk_user_id" in user_dict and user_dict["clerk_user_id"] is not None:
+        update_data["clerk_user_id"] = user_dict["clerk_user_id"]
+
+    res = hasura_client.update_user(
+        id=user_id,
+        set=user_set_input(**update_data)
+    )
+    if not res.update_user_by_pk:
         return None
-    for key, value in updated_user.dict(exclude_unset=True).items():
-        setattr(existing_user, key, value)
-    session.add(existing_user)
-    session.commit()
-    session.refresh(existing_user)
-    return existing_user
+    return _to_user(res.update_user_by_pk)
 
 # Delete a user
-def delete_user(session: Session, user_id: int) -> bool:
-    existing_user = get_user_by_id(session, user_id)
-    if not existing_user:
-        return False
-    session.delete(existing_user)
-    session.commit()
-    return True
+def delete_user(session: Any = None, user_id: int = 0) -> bool:
+    res = hasura_client.delete_user(id=user_id)
+    return res.delete_user_by_pk is not None
 
 # Get friends of a user
-def get_friends(session: Session, user_id: int) -> List[User]:
-    # Select User rows where a Friend row links the given user_id to the user's id
-    statement = (
-        select(User)
-        .distinct()
-        .join(Friend) 
-        .where(Friend.user_id == user_id,Friend.friend_id == User.id, Friend.status == "accepted")
-    )
-    results = session.exec(statement).all()
-    return list(results)
+def get_friends(session: Any = None, user_id: int = 0) -> List[User]:
+    res = hasura_client.get_friends(user_id=user_id)
+    friends: List[User] = []
+    for f in res.friend:
+        if f.friend_user:
+            friends.append(_to_user(f.friend_user))
+    return friends
 
-# get all pending friend requests for a user
-def get_pending_friend_requests(session: Session, user_id: int) -> List[User]:
-    statement = (
-        select(User)
-        .distinct()
-        .join(Friend) 
-        .where(Friend.friend_id == user_id, Friend.status == "pending", Friend.user_id == User.id)
-    )
-    results = session.exec(statement).all()
-    return list(results)
+# Get all pending friend requests for a user
+def get_pending_friend_requests(session: Any = None, user_id: int = 0) -> List[User]:
+    res = hasura_client.get_pending_friend_requests(user_id=user_id)
+    pending_users: List[User] = []
+    for f in res.friend:
+        if f.user:
+            pending_users.append(_to_user(f.user))
+    return pending_users
 
 # Accept a friend request
-def accept_friend_request(session: Session, user_id: int, friend_id: int) -> bool:
-    statement = select(Friend).where(
-        Friend.user_id == friend_id,
-        Friend.friend_id == user_id,
-        Friend.status == "pending"
-    )
-    friend_request = session.exec(statement).first()
-    if not friend_request:
-        return False
-    friend_request.status = "accepted"
-    session.add(friend_request)
-    session.commit()
-    return True
+def accept_friend_request(session: Any = None, user_id: int = 0, friend_id: int = 0) -> bool:
+    res = hasura_client.accept_friend_request(user_id=user_id, friend_id=friend_id)
+    return res.update_friend is not None and res.update_friend.affected_rows > 0
 
 # Reject a friend request
-def reject_friend_request(session: Session, user_id: int, friend_id: int) -> bool:
-    statement = select(Friend).where(
-        Friend.user_id == friend_id,
-        Friend.friend_id == user_id,
-        Friend.status == "pending"
-    )
-    friend_request = session.exec(statement).first()
-    if not friend_request:
-        return False
-    session.delete(friend_request)
-    session.commit()
-    return True
+def reject_friend_request(session: Any = None, user_id: int = 0, friend_id: int = 0) -> bool:
+    res = hasura_client.reject_friend_request(user_id=user_id, friend_id=friend_id)
+    return res.delete_friend is not None and res.delete_friend.affected_rows > 0
 
 # Send a friend request
-def send_friend_request(session: Session, user_id: int, friend_id: int) -> bool:
-    # Check if a friend request already exists
-    statement = select(Friend).where(
-        Friend.user_id == user_id,
-        Friend.friend_id == friend_id
-    )
-    existing_request = session.exec(statement).first()
-    if existing_request:
-        return False  # Friend request already exists
-    new_request = Friend(user_id=user_id, friend_id=friend_id, status="pending")
-    session.add(new_request)
-    session.commit()
-    return True
+def send_friend_request(session: Any = None, user_id: int = 0, friend_id: int = 0) -> bool:
+    check_res = hasura_client.find_friend_request(user_id=user_id, friend_id=friend_id)
+    if check_res.friend:
+        return False
+    res = hasura_client.send_friend_request(user_id=user_id, friend_id=friend_id)
+    return res.insert_friend_one is not None
 
 # Remove a friend
-def remove_friend(session: Session, user_id: int, friend_id: int) -> bool:
-    statement = select(Friend).where(
-        ((Friend.user_id == user_id) & (Friend.friend_id == friend_id)) |
-        ((Friend.user_id == friend_id) & (Friend.friend_id == user_id)),
-        Friend.status == "accepted"
-    )
-    friendship = session.exec(statement).first()
-    if not friendship:
-        return False
-    session.delete(friendship)
-    session.commit()
-    return True
+def remove_friend(session: Any = None, user_id: int = 0, friend_id: int = 0) -> bool:
+    res = hasura_client.remove_friend(user_id=user_id, friend_id=friend_id)
+    return res.delete_friend is not None and res.delete_friend.affected_rows > 0
 
-# Find out all the users who are not friends with a given user 
-def get_non_friends(session: Session, name: Optional[str] = None) -> List[User]:
-    """Return users optionally filtered by `name` (case-insensitive).
-
-    This function no longer excludes a specific user's friends — it simply
-    searches users by name when provided.
-    """
-    statement = select(User)
-
+# Find out all the users who are not friends with a given user
+def get_non_friends(session: Any = None, name: Optional[str] = None) -> List[User]:
     if name:
-        name_col = cast(ColumnElement[Any], User.name)
-        statement = statement.where(name_col.ilike(f"%{name}%"))
-
-    results = session.exec(statement).all()
-    return list(results)
+        res = hasura_client.search_users(query=f"%{name}%")
+    else:
+        res = hasura_client.list_users(offset=0, limit=100)
+    return [_to_user(u) for u in res.user]
