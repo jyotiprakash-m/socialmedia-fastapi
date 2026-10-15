@@ -1,0 +1,35 @@
+table:
+  name: friend
+  schema: public
+object_relationships:
+  - name: friend_user
+    using:
+      foreign_key_constraint_on: friend_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+event_triggers:
+  - name: on_friend_request
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 3
+      timeout_sec: 60
+    webhook: https://socialmedia-fastapi-yx0y.onrender.com/webhooks/events/friend-request
+  - name: on_friend_status_updated
+    definition:
+      enable_manual: false
+      update:
+        columns:
+          - status
+    retry_conf:
+      interval_sec: 10
+      num_retries: 3
+      timeout_sec: 60
+    webhook: https://socialmedia-fastapi-yx0y.onrender.com/webhooks/events/friend-status-updated
+    headers:
+      - name: x-webhook-secret
+        value: super-secret-hasura-key-2026

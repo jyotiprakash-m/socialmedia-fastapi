@@ -1,0 +1,21 @@
+table:
+  name: comment
+  schema: public
+object_relationships:
+  - name: parent_comment
+    using:
+      foreign_key_constraint_on: parent_comment_id
+  - name: post
+    using:
+      foreign_key_constraint_on: post_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+array_relationships:
+  - name: replies
+    using:
+      foreign_key_constraint_on:
+        column: parent_comment_id
+        table:
+          name: comment
+          schema: public

@@ -1,0 +1,10 @@
+- name: hourly_story_cleanup
+  webhook: https://socialmedia-fastapi-yx0y.onrender.com/webhooks/cron/cleanup-stories
+  schedule: '* * * * *'
+  include_in_metadata: true
+  payload:
+    action: cleanup_expired_stories
+    retention: 24h
+  headers:
+    - name: x-webhook-secret
+      value: super-secret-hasura-key-2026

@@ -1,0 +1,5 @@
+- "!include public_comment.yaml"
+- "!include public_friend.yaml"
+- "!include public_post.yaml"
+- "!include public_story.yaml"
+- "!include public_user.yaml"
