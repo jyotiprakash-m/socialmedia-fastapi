@@ -29,12 +29,13 @@ async def lifespan(app: FastAPI):
     init_db()
     yield 
 
-app = FastAPI(title="Social Media App", lifespan=lifespan)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+app = FastAPI(title="Sociva - Social Media", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/views", StaticFiles(directory="views", html=True), name="views")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://2rtg8h-5173.csb.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -96,10 +97,16 @@ app.include_router(story_route.router)
 app.include_router(webhook_route.router)
 
 
-# Root endpoint
+# Root endpoint - serve Sociva frontend
+from fastapi.responses import FileResponse
+import os
+
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Social Media App API"}
+    index_file = os.path.join("views", "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"message": "Welcome to Sociva API"}
 
 
 
