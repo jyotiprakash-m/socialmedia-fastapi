@@ -13,7 +13,7 @@ import base64
 from sqladmin import Admin, ModelView
 # All Model imports
 from models import User,Comment,Post,Friend,Story
-from routes import user_route,post_route,story_route
+from routes import user_route, post_route, story_route, webhook_route
 
 # Basic auth temporarily disabled
 # security = HTTPBasic()
@@ -93,6 +93,8 @@ admin.add_view(FriendAdmin)
 app.include_router(user_route.router)
 app.include_router(post_route.router)
 app.include_router(story_route.router)
+app.include_router(webhook_route.router)
+
 
 # Root endpoint
 @app.get("/")
