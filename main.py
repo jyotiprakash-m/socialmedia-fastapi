@@ -35,7 +35,15 @@ app.mount("/views", StaticFiles(directory="views", html=True), name="views")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://socialmedia-fastapi-yx0y.onrender.com",
+        "https://2rtg8h-5173.csb.app"
+    ],
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
