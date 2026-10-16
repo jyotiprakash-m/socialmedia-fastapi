@@ -259,6 +259,7 @@ Open your browser at:
 | `GET` | `/posts/{id}` | Get single post by ID |
 | `POST` | `/posts/` | Publish a new image or video post |
 | `POST` | `/posts/schedule` | Schedule post for future release via Hasura Event |
+| `DELETE` | `/posts/schedule/{event_id}` | Cancel / delete a pending scheduled post in Hasura |
 | `GET` | `/posts/user/{user_id}` | Get all posts authored by a user |
 | `DELETE` | `/posts/{id}` | Delete a post |
 | `POST` | `/posts/{id}/comments` | Add a comment to a post |

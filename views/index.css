@@ -505,6 +505,27 @@ img, video { display: block; max-width: 100%; }
 .pill.pending { background: rgba(255, 112, 67, .14); color: var(--coral); }
 .pill.done { background: rgba(34, 197, 94, .12); color: var(--success); }
 
+.schedule-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.schedule-actions .cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s var(--ease);
+}
+.schedule-actions .cancel-btn:hover {
+  color: var(--danger);
+  border-color: rgba(244, 63, 94, .35);
+  background: rgba(244, 63, 94, .1);
+}
+
 /* ==========================================================================
    Modals
    ========================================================================== */

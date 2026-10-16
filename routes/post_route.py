@@ -122,6 +122,23 @@ def schedule_post(req: PostScheduleRequest):
         "message": f"Post scheduled successfully for {schedule_time.isoformat()}"
     }
 
+@router.delete("/schedule/{event_id}")
+def cancel_scheduled_post(event_id: str):
+    """Cancel / delete a pending scheduled post in Hasura before it is published."""
+    from services.scheduler_service import delete_one_off_scheduled_event
+    try:
+        delete_one_off_scheduled_event(event_id)
+        return {
+            "ok": True,
+            "event_id": event_id,
+            "message": "Scheduled post cancelled successfully"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel scheduled event: {str(e)}"
+        )
+
 @router.get("/user/{user_id}", response_model=List[PostResponse])
 def get_posts_for_user(
     user_id: int, 

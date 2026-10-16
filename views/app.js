@@ -1308,7 +1308,13 @@
             <p>${esc(s.content)}</p>
             <small>${esc(formatDateTime(s.schedule_at))} · ${timeAgo(s.schedule_at)}${s.media_url ? ' · <i class="fa-regular fa-image"></i> media' : ''}</small>
           </div>
-          <span class="pill ${done ? 'done' : 'pending'}">${done ? 'Delivered' : 'Scheduled'}</span>
+          <div class="schedule-actions">
+            <span class="pill ${done ? 'done' : 'pending'}">${done ? 'Delivered' : 'Scheduled'}</span>
+            ${!done && s.event_id ? `
+              <button class="cancel-btn" data-action="cancel-scheduled" data-event-id="${esc(s.event_id)}" title="Cancel scheduled post">
+                <i class="fa-solid fa-trash-can"></i> Cancel
+              </button>` : ''}
+          </div>
         </div>`;
       }).join('')}</div>`;
   }
@@ -1417,6 +1423,22 @@
     'clear-delivered': () => {
       store.set(userKey('scheduled'), store.get(userKey('scheduled'), []).filter((s) => new Date(s.schedule_at) > new Date()));
       renderProfile(state.me.id);
+    },
+    'cancel-scheduled': async (el) => {
+      const eventId = el.dataset.eventId;
+      if (!eventId) return;
+      if (!confirm('Are you sure you want to cancel this scheduled post?')) return;
+      setBusy(el, true);
+      try {
+        await api(`/posts/schedule/${eventId}`, { method: 'DELETE' });
+        const list = store.get(userKey('scheduled'), []).filter((s) => s.event_id !== eventId);
+        store.set(userKey('scheduled'), list);
+        toast('Scheduled post cancelled', 'info');
+        renderProfile(state.me.id);
+      } catch (err) {
+        toast(err.message || 'Failed to cancel scheduled post', 'error');
+        setBusy(el, false);
+      }
     },
     'open-create-account': () => openAccountModal('create'),
     'open-edit-account': () => openAccountModal('edit'),

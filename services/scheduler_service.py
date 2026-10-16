@@ -48,3 +48,29 @@ def create_one_off_scheduled_event(
         raise RuntimeError(f"Failed to create scheduled event in Hasura: {data}")
 
     return data["event_id"]
+
+
+def delete_one_off_scheduled_event(event_id: str) -> bool:
+    """
+    Deletes / cancels a one-off scheduled event from Hasura before it fires.
+    """
+    hasura_url = (settings.HASURA_GRAPHQL_URL or "https://genuine-eft-93.hasura.app/v1/graphql").replace("/v1/graphql", "/v1/metadata")
+    headers = {
+        "Content-Type": "application/json",
+        "x-hasura-admin-secret": settings.HASURA_ADMIN_SECRET or ""
+    }
+
+    body = {
+        "type": "delete_scheduled_event",
+        "args": {
+            "type": "one_off",
+            "event_id": event_id
+        }
+    }
+
+    resp = httpx.post(hasura_url, json=body, headers=headers, timeout=10)
+    data = resp.json()
+    if resp.status_code != 200 or data.get("message") != "success":
+        raise RuntimeError(f"Failed to delete scheduled event in Hasura: {data}")
+
+    return True
