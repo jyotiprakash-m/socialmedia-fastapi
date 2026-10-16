@@ -1,5 +1,5 @@
 from typing import List, Optional, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from models import Story
 from hasura import hasura_client
 
@@ -22,10 +22,13 @@ def _to_story(s: Any) -> Story:
 
 # Create a new story
 def create_story(session: Any = None, story: Story = None) -> Story:
+    expires_at = story.expires_at if (story and story.expires_at) else (datetime.now(timezone.utc) + timedelta(hours=24))
+    expires_at_iso = expires_at.isoformat() if isinstance(expires_at, datetime) else str(expires_at)
     res = hasura_client.create_story(
         user_id=story.user_id,
         media_url=story.media_url,
-        media_type=story.media_type
+        media_type=story.media_type,
+        expires_at=expires_at_iso
     )
     if not res.insert_story_one:
         raise RuntimeError("Failed to create story in Hasura")

@@ -560,12 +560,17 @@ class HasuraClient(BaseClient):
         return GetStoriesForUsers.model_validate(data)
 
     def create_story(
-        self, user_id: int, media_url: str, media_type: str, **kwargs: Any
+        self,
+        user_id: int,
+        media_url: str,
+        media_type: str,
+        expires_at: Union[Optional[Any], UnsetType] = UNSET,
+        **kwargs: Any,
     ) -> CreateStory:
         query = gql("""
-            mutation CreateStory($user_id: Int!, $media_url: String!, $media_type: String!) {
+            mutation CreateStory($user_id: Int!, $media_url: String!, $media_type: String!, $expires_at: timestamptz) {
               insert_story_one(
-                object: {user_id: $user_id, media_url: $media_url, media_type: $media_type}
+                object: {user_id: $user_id, media_url: $media_url, media_type: $media_type, expires_at: $expires_at}
               ) {
                 id
                 user_id
@@ -580,6 +585,7 @@ class HasuraClient(BaseClient):
             "user_id": user_id,
             "media_url": media_url,
             "media_type": media_type,
+            "expires_at": expires_at,
         }
         response = self.execute(
             query=query, operation_name="CreateStory", variables=variables, **kwargs

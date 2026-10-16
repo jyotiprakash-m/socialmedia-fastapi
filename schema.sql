@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS story (
     media_url VARCHAR(1024) NOT NULL,
     media_type VARCHAR(50) NOT NULL, -- 'image' | 'video'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours') NOT NULL
 );
 
 -- ==============================================================================
